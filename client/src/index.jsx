@@ -18,11 +18,13 @@ class App extends React.Component {
     this.handleSelection = this.handleSelection.bind(this);
     this.getMovies = this.getMovies.bind(this);
     this.handleClick = this.handleClick.bind(this);
+    this.swapFavorites = this.swapFavorites.bind(this);
     // you might have to do something important here!
   }
 
   componentDidMount() {
     this.getMovies();
+    this.getFaves();
   }
 
   handleSelection(genreid) {
@@ -52,6 +54,18 @@ class App extends React.Component {
     });
     // make an axios request to your server on the GET SEARCH endpoint
   }
+  getFaves() {
+    Axios.get('/movies/faves').then(results => {
+      this.setState({ favorites: results.data }, err => {
+        if (err) {
+          console.log(err);
+        } else {
+          console.log(results);
+        }
+      });
+    });
+    // make an axios request to your server on the GET SEARCH endpoint
+  }
 
   handleClick(movie) {
     if (!this.state.showFaves) {
@@ -76,6 +90,9 @@ class App extends React.Component {
       .then(data => {
         //get faves from server and update state
         alert('movie has been added as your favorite');
+        var temp = this.state.favorites;
+        temp.push(movie);
+        this.setState({ favorites: temp });
       })
       .catch(err => {
         console.log(err);
@@ -87,14 +104,10 @@ class App extends React.Component {
     console.log('delete:', movie);
     Axios.delete('/movies/delete', {
       data: { id: movie.id }
-    }).then(err => {
-      if (err) {
-        console.log(err);
-      } else {
-        console.log('deleted!');
-        //get faves from server and update state
-      }
-      // same as above but do something diff
+    }).then(results => {
+      alert('deleted!');
+      //get faves from server and update state
+      this.getFaves();
     });
   }
 
@@ -118,6 +131,7 @@ class App extends React.Component {
             showFaves={this.state.showFaves}
             handleSelection={this.handleSelection}
             getMovies={this.getMovies}
+            swapFavorites={this.swapFavorites}
           />
           <Movies
             movies={

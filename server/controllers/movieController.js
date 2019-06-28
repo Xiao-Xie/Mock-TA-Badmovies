@@ -61,11 +61,29 @@ module.exports = {
     // use this endpoint, which will also require your API key: https://api.themoviedb.org/3/genre/movie/list
     // send back
   },
+  getFaves: (req, res) => {
+    movieModel.query(`select * from movies`, (err, results) => {
+      if (err) {
+        console.log(err);
+        res.sendStatus(500);
+      } else {
+        console.log(results);
+        var faves = [];
+        results.map(rawdata => {
+          faves.push({
+            id: rawdata.movie_id,
+            title: rawdata.movie_title,
+            poster_path: rawdata.poster_path,
+            release_date: rawdata.release_date,
+            vote_average: rawdata.vote_average
+          });
+        });
+        res.send(faves);
+      }
+    });
+  },
   saveMovie: (req, res) => {
     var data = req.body.data;
-    // console.log(data);
-    // console.log(data.id);
-
     //search if movie exists
     movieModel.query(
       `select * from movies where movie_id = ?`,
@@ -75,8 +93,8 @@ module.exports = {
           console.log(err);
           res.sendStatus(500);
         } else {
-          if (results !== []) {
-            console.log('already exist'),
+          if (results.length !== 0) {
+            console.log('eisting:', results),
               res.status(304).send('Movie already exists');
           } else {
             movieModel.query(
@@ -107,5 +125,40 @@ module.exports = {
       }
     );
   },
-  deleteMovie: (req, res) => {}
+  deleteMovie: (req, res) => {
+    var data = req.body;
+    console.log(req);
+    //search if movie exists
+    movieModel.query(
+      `select * from movies where movie_id = ?`,
+      data.id,
+      (err, results) => {
+        if (err) {
+          console.log(err);
+          res.sendStatus(500);
+        } else {
+          if (results.length === 0) {
+            console.log('not eisting'),
+              res.status(404).send('Movie does not exist');
+          } else {
+            movieModel.query(
+              `
+            Delete from movies 
+            where movie_id = ? `,
+              [data.id],
+              (err, data) => {
+                if (err) {
+                  console.log(err);
+                  res.sendStatus(500);
+                } else {
+                  console.log('removed from my movielist');
+                  res.sendStatus(204);
+                }
+              }
+            );
+          }
+        }
+      }
+    );
+  }
 };
