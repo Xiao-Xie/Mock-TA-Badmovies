@@ -12,14 +12,14 @@ module.exports = {
       url: 'https://api.themoviedb.org/3/discover/movie',
       qs: {
         api_key: API_KEY,
-        with_genres: req.body.genre_id,
+        with_genres: req.query.genre_id,
         sort_by: 'vote_average.desc'
       },
       body: '{}'
     };
     request(options, function(error, response, body) {
       if (error) throw new Error(error);
-      res.send(body);
+      res.status(200).send(body);
     });
     // get the search genre
 
@@ -39,7 +39,7 @@ module.exports = {
       })
       .then(results => {
         var data = results.data.genres;
-        res.send(data);
+        res.status(200).send(data);
         // data.map(genre => {
         //   var queryString = `insert into genre (genre_id, genre_name) values (${
         //     genre.id
@@ -61,6 +61,51 @@ module.exports = {
     // use this endpoint, which will also require your API key: https://api.themoviedb.org/3/genre/movie/list
     // send back
   },
-  saveMovie: (req, res) => {},
+  saveMovie: (req, res) => {
+    var data = req.body.data;
+    // console.log(data);
+    // console.log(data.id);
+
+    //search if movie exists
+    movieModel.query(
+      `select * from movies where movie_id = ?`,
+      data.id,
+      (err, results) => {
+        if (err) {
+          console.log(err);
+          res.sendStatus(500);
+        } else {
+          if (results !== []) {
+            console.log('already exist'),
+              res.status(304).send('Movie already exists');
+          } else {
+            movieModel.query(
+              `
+            INSERT INTO movies 
+            (movie_id,movie_title,poster_path,release_date,vote_average) 
+            values 
+            (?,?,?,?,?)`,
+              [
+                data.id,
+                data.title,
+                data.poster_path,
+                data.release_date,
+                data.average_vote
+              ],
+              (err, data) => {
+                if (err) {
+                  console.log(err);
+                  res.sendStatus(500);
+                } else {
+                  console.log('saved to my movielist');
+                  res.sendStatus(201);
+                }
+              }
+            );
+          }
+        }
+      }
+    );
+  },
   deleteMovie: (req, res) => {}
 };

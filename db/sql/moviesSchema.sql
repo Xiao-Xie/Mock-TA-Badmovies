@@ -12,6 +12,11 @@ CREATE TABLE genre(
 
 CREATE TABLE movies(
    movie_id INT,
-   movie_name VARCHAR(50),
+   movie_title VARCHAR(255),
+   poster_path VARCHAR(255),
+   release_date VARCHAR(20),
+   vote_average INT,
    PRIMARY KEY(movie_id)
 );
+
+-- run scripts in mysql shell
